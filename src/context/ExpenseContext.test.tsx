@@ -20,7 +20,8 @@ const mockExpense = {
 
 const mockTrip = {
   id: 't1', title: 'Vegas', description: null, start_date: null,
-  end_date: null, participants: ['u1', 'u2'], created_at: '', owner_id: 'u1',
+  end_date: null, participants: ['u1', 'u2'], invite_code: 'VEGAS123',
+  created_at: '', updated_at: '', owner_id: 'u1',
 }
 
 function TestComponent() {

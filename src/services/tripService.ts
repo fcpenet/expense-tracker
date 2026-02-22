@@ -53,3 +53,16 @@ export async function deleteTrip(id: string, apiKey: string): Promise<void> {
     toApiError(err)
   }
 }
+
+export async function joinTrip(id: string, invite_code: string, apiKey: string): Promise<Trip> {
+  try {
+    const { data } = await axios.post<Trip>(
+      `${BASE}/api/trips/${id}/join`,
+      { invite_code },
+      authHeaders(apiKey)
+    )
+    return data
+  } catch (err) {
+    toApiError(err)
+  }
+}

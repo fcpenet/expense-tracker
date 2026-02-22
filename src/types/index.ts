@@ -41,8 +41,14 @@ export interface Trip {
   start_date: string | null
   end_date: string | null
   participants: string[]
+  invite_code: string | null
   created_at: string
+  updated_at: string
   owner_id: string
+}
+
+export interface JoinTripRequest {
+  invite_code: string
 }
 
 // ─── Expenses ────────────────────────────────────────────────────────────────

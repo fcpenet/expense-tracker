@@ -6,7 +6,7 @@ import {
   ReactNode,
 } from 'react'
 import { fetchExpenses, createExpense, updateExpense, deleteExpense } from '../services/expenseService'
-import { fetchTrips, createTrip, deleteTrip } from '../services/tripService'
+import { fetchTrips, createTrip, deleteTrip, joinTrip } from '../services/tripService'
 import { useAuth } from './AuthContext'
 import type { Expense, ExpenseCreate, Trip, TripCreate } from '../types'
 
@@ -20,6 +20,7 @@ interface ExpenseState {
   editExpense: (id: string, payload: Partial<ExpenseCreate>) => Promise<void>
   removeExpense: (id: string) => Promise<void>
   addTrip: (payload: Partial<TripCreate>) => Promise<void>
+  enterTrip: (tripId: string, inviteCode: string) => Promise<void>
   removeTrip: (id: string) => Promise<void>
 }
 
@@ -84,6 +85,17 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     [apiKey]
   )
 
+  const enterTrip = useCallback(
+    async (tripId: string, inviteCode: string) => {
+      if (!apiKey) return
+      const trip = await joinTrip(tripId, inviteCode, apiKey)
+      setTrips((prev) =>
+        prev.find((t) => t.id === trip.id) ? prev : [trip, ...prev]
+      )
+    },
+    [apiKey]
+  )
+
   const removeTrip = useCallback(
     async (id: string) => {
       if (!apiKey) return
@@ -95,7 +107,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
   return (
     <ExpenseContext.Provider
-      value={{ expenses, trips, loading, error, loadAll, addExpense, editExpense, removeExpense, addTrip, removeTrip }}
+      value={{ expenses, trips, loading, error, loadAll, addExpense, editExpense, removeExpense, addTrip, enterTrip, removeTrip }}
     >
       {children}
     </ExpenseContext.Provider>

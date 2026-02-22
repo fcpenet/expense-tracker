@@ -45,7 +45,7 @@ describe('authService', () => {
   })
 
   describe('register', () => {
-    it('sends POST to /api/users/register with user data', async () => {
+    it('sends POST to /api/users/register with email and password only', async () => {
       const mockResponse = {
         data: { id: 'u2', email: 'new@test.com', organization_id: null, created_at: '' },
       }
