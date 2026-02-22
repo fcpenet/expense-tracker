@@ -12,7 +12,7 @@ vi.mock('./AuthContext', () => ({
 }))
 
 const mockExpense = {
-  id: 'e1', title: 'Dinner', amount: 60, tag: null, category: 'food',
+  id: 'e1', title: 'Dinner', amount: 60, tag: null, category: 'food' as const,
   location: null, description: null, payor_id: 'u1',
   participants: [{ user_id: 'u1', share: 0.5 }, { user_id: 'u2', share: 0.5 }],
   trip_id: null, created_at: '2024-01-01T00:00:00Z', owner_id: 'u1',
