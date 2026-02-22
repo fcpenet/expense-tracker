@@ -61,4 +61,10 @@ describe('DashboardPage', () => {
     renderPage()
     expect(screen.getAllByText(/Add Expense/i).length).toBeGreaterThan(0)
   })
+
+  it('has New Trip quick action link pointing to /groups', () => {
+    renderPage()
+    const tripLink = screen.getByRole('link', { name: /New Trip/i })
+    expect(tripLink).toHaveAttribute('href', '/groups')
+  })
 })

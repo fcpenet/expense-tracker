@@ -41,16 +41,27 @@ export function DashboardPage() {
       </div>
 
       <div className="px-4 pt-4 space-y-4 max-w-lg mx-auto">
-        {/* Quick action */}
-        <Link
-          to="/add-expense"
-          className="flex items-center justify-center gap-2 w-full bg-white border-2 border-dashed border-brand-300 text-brand-700 font-semibold py-3 rounded-xl hover:bg-brand-50 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Expense
-        </Link>
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            to="/add-expense"
+            className="flex items-center justify-center gap-2 bg-white border-2 border-dashed border-brand-300 text-brand-700 font-semibold py-3 rounded-xl hover:bg-brand-50 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Expense
+          </Link>
+          <Link
+            to="/groups"
+            className="flex items-center justify-center gap-2 bg-white border-2 border-dashed border-brand-300 text-brand-700 font-semibold py-3 rounded-xl hover:bg-brand-50 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            New Trip
+          </Link>
+        </div>
 
         {/* Expense feed */}
         <section>
