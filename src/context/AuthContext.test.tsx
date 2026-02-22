@@ -86,4 +86,34 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('auth').textContent).toBe('logged-in')
     expect(screen.getByTestId('key').textContent).toBe('saved-key')
   })
+
+  it('is unauthenticated when api_key exists but user is missing from localStorage', () => {
+    localStorage.setItem('api_key', 'orphan-key')
+    // no 'user' key set
+
+    render(<AuthProvider><TestComponent /></AuthProvider>)
+
+    expect(screen.getByTestId('auth').textContent).toBe('logged-out')
+    expect(screen.getByTestId('email').textContent).toBe('none')
+  })
+
+  it('is unauthenticated when user exists in localStorage but api_key is missing', () => {
+    localStorage.setItem('user', JSON.stringify(mockLoginResponse.user))
+    // no 'api_key' key set
+
+    render(<AuthProvider><TestComponent /></AuthProvider>)
+
+    expect(screen.getByTestId('auth').textContent).toBe('logged-out')
+  })
+
+  it('is unauthenticated and does not crash when user in localStorage is corrupt JSON', () => {
+    localStorage.setItem('api_key', 'some-key')
+    localStorage.setItem('user', 'NOT_VALID_JSON{{')
+
+    expect(() =>
+      render(<AuthProvider><TestComponent /></AuthProvider>)
+    ).not.toThrow()
+
+    expect(screen.getByTestId('auth').textContent).toBe('logged-out')
+  })
 })

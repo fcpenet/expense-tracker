@@ -13,12 +13,31 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null)
 
+function loadStoredSession(): { user: UserResponse | null; apiKey: string | null } {
+  const apiKey = localStorage.getItem('api_key')
+  const stored = localStorage.getItem('user')
+
+  if (!apiKey || !stored) {
+    // Partial state — clear both to stay consistent
+    localStorage.removeItem('api_key')
+    localStorage.removeItem('user')
+    return { user: null, apiKey: null }
+  }
+
+  try {
+    const user = JSON.parse(stored) as UserResponse
+    return { user, apiKey }
+  } catch {
+    // Corrupt JSON — clear and start fresh
+    localStorage.removeItem('api_key')
+    localStorage.removeItem('user')
+    return { user: null, apiKey: null }
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserResponse | null>(() => {
-    const stored = localStorage.getItem('user')
-    return stored ? JSON.parse(stored) : null
-  })
-  const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('api_key'))
+  const [user, setUser] = useState<UserResponse | null>(() => loadStoredSession().user)
+  const [apiKey, setApiKey] = useState<string | null>(() => loadStoredSession().apiKey)
 
   const login = useCallback(async (credentials: UserLogin) => {
     const response = await loginService(credentials)
@@ -41,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, apiKey, isAuthenticated: !!apiKey, login, register, logout }}
+      value={{ user, apiKey, isAuthenticated: !!apiKey && !!user, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>
