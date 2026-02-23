@@ -44,6 +44,24 @@ describe('tripService', () => {
     expect(result.id).toBe('t1')
   })
 
+  it('createTrip omits participants when they contain empty strings', async () => {
+    mockedAxios.post = vi.fn().mockResolvedValue({ data: mockTrip })
+
+    await createTrip({ title: 'Solo Trip', participants: [''] }, API_KEY)
+
+    const sentPayload = (mockedAxios.post as ReturnType<typeof vi.fn>).mock.calls[0][1]
+    expect(sentPayload.participants).toBeUndefined()
+  })
+
+  it('createTrip omits participants when array is empty', async () => {
+    mockedAxios.post = vi.fn().mockResolvedValue({ data: mockTrip })
+
+    await createTrip({ title: 'Solo Trip', participants: [] }, API_KEY)
+
+    const sentPayload = (mockedAxios.post as ReturnType<typeof vi.fn>).mock.calls[0][1]
+    expect(sentPayload.participants).toBeUndefined()
+  })
+
   it('deleteTrip calls DELETE /api/trips/:id', async () => {
     mockedAxios.delete = vi.fn().mockResolvedValue({ data: null })
 

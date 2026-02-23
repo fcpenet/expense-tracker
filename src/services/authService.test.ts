@@ -18,7 +18,6 @@ describe('authService', () => {
         data: {
           api_key: 'test-key-123',
           expires_at: '2025-12-31T00:00:00Z',
-          user: { id: 'u1', email: 'test@test.com', organization_id: null, created_at: '' },
         },
       }
       mockedAxios.post = vi.fn().mockResolvedValue(mockResponse)

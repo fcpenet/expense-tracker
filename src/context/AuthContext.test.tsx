@@ -9,8 +9,9 @@ vi.mock('../services/authService')
 const mockLoginResponse = {
   api_key: 'key-abc',
   expires_at: '2099-01-01T00:00:00Z',
-  user: { id: 'u1', email: 'test@test.com', organization_id: null, created_at: '' },
 }
+
+const mockStoredUser = { id: '', email: 'test@test.com', organization_id: null, created_at: '' }
 
 function TestComponent() {
   const { user, apiKey, login, logout, isAuthenticated } = useAuth()
@@ -46,7 +47,7 @@ describe('AuthContext', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('auth').textContent).toBe('logged-in')
-      expect(screen.getByTestId('email').textContent).toBe('test@test.com')
+      expect(screen.getByTestId('email').textContent).toBe('test@test.com') // from credentials
       expect(screen.getByTestId('key').textContent).toBe('key-abc')
     })
   })
@@ -79,7 +80,7 @@ describe('AuthContext', () => {
 
   it('restores session from localStorage on mount', () => {
     localStorage.setItem('api_key', 'saved-key')
-    localStorage.setItem('user', JSON.stringify(mockLoginResponse.user))
+    localStorage.setItem('user', JSON.stringify(mockStoredUser))
 
     render(<AuthProvider><TestComponent /></AuthProvider>)
 
@@ -87,18 +88,17 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('key').textContent).toBe('saved-key')
   })
 
-  it('is unauthenticated when api_key exists but user is missing from localStorage', () => {
+  it('is authenticated when api_key exists but user is missing from localStorage', () => {
     localStorage.setItem('api_key', 'orphan-key')
-    // no 'user' key set
+    // no 'user' key — valid since login API does not return a user object
 
     render(<AuthProvider><TestComponent /></AuthProvider>)
 
-    expect(screen.getByTestId('auth').textContent).toBe('logged-out')
-    expect(screen.getByTestId('email').textContent).toBe('none')
+    expect(screen.getByTestId('auth').textContent).toBe('logged-in')
   })
 
   it('is unauthenticated when user exists in localStorage but api_key is missing', () => {
-    localStorage.setItem('user', JSON.stringify(mockLoginResponse.user))
+    localStorage.setItem('user', JSON.stringify(mockStoredUser))
     // no 'api_key' key set
 
     render(<AuthProvider><TestComponent /></AuthProvider>)
@@ -106,7 +106,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('auth').textContent).toBe('logged-out')
   })
 
-  it('is unauthenticated and does not crash when user in localStorage is corrupt JSON', () => {
+  it('does not crash when user in localStorage is corrupt JSON, and remains authenticated via api_key', () => {
     localStorage.setItem('api_key', 'some-key')
     localStorage.setItem('user', 'NOT_VALID_JSON{{')
 
@@ -114,6 +114,8 @@ describe('AuthContext', () => {
       render(<AuthProvider><TestComponent /></AuthProvider>)
     ).not.toThrow()
 
-    expect(screen.getByTestId('auth').textContent).toBe('logged-out')
+    // api_key is still valid — user stays authenticated, just with no user data
+    expect(screen.getByTestId('auth').textContent).toBe('logged-in')
+    expect(screen.getByTestId('email').textContent).toBe('none')
   })
 })

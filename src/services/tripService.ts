@@ -26,7 +26,12 @@ export async function fetchTrips(apiKey: string): Promise<Trip[]> {
 
 export async function createTrip(payload: Partial<TripCreate>, apiKey: string): Promise<Trip> {
   try {
-    const { data } = await axios.post<Trip>(`${BASE}/api/trips/`, payload, authHeaders(apiKey))
+    const validParticipants = (payload.participants ?? []).filter((id) => id.trim() !== '')
+    const body = {
+      ...payload,
+      ...(validParticipants.length > 0 ? { participants: validParticipants } : { participants: undefined }),
+    }
+    const { data } = await axios.post<Trip>(`${BASE}/api/trips/`, body, authHeaders(apiKey))
     return data
   } catch (err) {
     toApiError(err)

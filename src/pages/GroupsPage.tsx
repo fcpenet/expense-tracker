@@ -1,7 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useExpenses } from '../context/ExpenseContext'
-import { useAuth } from '../context/AuthContext'
 import { Header } from '../components/shared/Header'
 import { BottomNav } from '../components/shared/BottomNav'
 import { Spinner } from '../components/shared/Spinner'
@@ -11,7 +10,6 @@ type ActiveForm = 'create' | 'join' | null
 
 export function GroupsPage() {
   const { trips, loading, loadAll, addTrip, enterTrip } = useExpenses()
-  const { user } = useAuth()
 
   const [activeForm, setActiveForm] = useState<ActiveForm>(null)
 
@@ -40,7 +38,7 @@ export function GroupsPage() {
     setCreateSaving(true)
     setCreateError('')
     try {
-      await addTrip({ title: title.trim(), participants: [user?.id ?? ''] })
+      await addTrip({ title: title.trim() })
       setTitle('')
       setActiveForm(null)
     } catch (err: unknown) {

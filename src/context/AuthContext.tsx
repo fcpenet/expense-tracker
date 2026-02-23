@@ -15,23 +15,19 @@ const AuthContext = createContext<AuthState | null>(null)
 
 function loadStoredSession(): { user: UserResponse | null; apiKey: string | null } {
   const apiKey = localStorage.getItem('api_key')
-  const stored = localStorage.getItem('user')
 
-  if (!apiKey || !stored) {
-    // Partial state — clear both to stay consistent
-    localStorage.removeItem('api_key')
-    localStorage.removeItem('user')
-    return { user: null, apiKey: null }
-  }
+  if (!apiKey) return { user: null, apiKey: null }
+
+  const stored = localStorage.getItem('user')
+  if (!stored) return { user: null, apiKey }
 
   try {
     const user = JSON.parse(stored) as UserResponse
     return { user, apiKey }
   } catch {
-    // Corrupt JSON — clear and start fresh
-    localStorage.removeItem('api_key')
+    // Corrupt user JSON — remove it but keep the valid api_key
     localStorage.removeItem('user')
-    return { user: null, apiKey: null }
+    return { user: null, apiKey }
   }
 }
 
@@ -41,10 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (credentials: UserLogin) => {
     const response = await loginService(credentials)
-    setUser(response.user)
+    // The API only returns api_key + expires_at — construct user from known email
+    const sessionUser: UserResponse = {
+      id: '',
+      email: credentials.email,
+      organization_id: null,
+      created_at: '',
+    }
+    setUser(sessionUser)
     setApiKey(response.api_key)
     localStorage.setItem('api_key', response.api_key)
-    localStorage.setItem('user', JSON.stringify(response.user))
+    localStorage.setItem('user', JSON.stringify(sessionUser))
   }, [])
 
   const register = useCallback(async (payload: UserRegister) => {
@@ -60,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, apiKey, isAuthenticated: !!apiKey && !!user, login, register, logout }}
+      value={{ user, apiKey, isAuthenticated: !!apiKey, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>

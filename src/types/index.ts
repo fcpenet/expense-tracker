@@ -21,7 +21,6 @@ export interface UserResponse {
 export interface LoginResponse {
   api_key: string
   expires_at: string
-  user: UserResponse
 }
 
 // ─── Trips (Groups) ──────────────────────────────────────────────────────────
@@ -31,7 +30,7 @@ export interface TripCreate {
   description?: string
   start_date?: string
   end_date?: string
-  participants: string[]   // user IDs
+  participants?: string[]  // user IDs — omit to let the API add the creator automatically
 }
 
 export interface Trip {
