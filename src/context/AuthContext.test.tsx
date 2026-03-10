@@ -3,15 +3,19 @@ import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider, useAuth } from './AuthContext'
 import * as authService from '../services/authService'
+import * as tokenService from '../services/tokenService'
+
+// turso-auth's AuthProvider is just a passthrough in tests
+vi.mock('turso-auth', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
 
 vi.mock('../services/authService')
+vi.mock('../services/tokenService')
 
-const mockLoginResponse = {
-  api_key: 'key-abc',
-  expires_at: '2099-01-01T00:00:00Z',
-}
-
-const mockStoredUser = { id: '', email: 'test@test.com', organization_id: null, created_at: '' }
+const mockLoginResponse = { api_key: 'key-abc', expires_at: '2099-01-01T00:00:00Z' }
+const mockValidResponse = { valid: true, uses_remaining: null, expires_at: null }
+const mockStoredUser = { id: 0, email: 'test@test.com', organization_id: null, role: 'member', created_at: '' }
 
 function TestComponent() {
   const { user, apiKey, login, logout, isAuthenticated } = useAuth()
@@ -20,7 +24,7 @@ function TestComponent() {
       <span data-testid="auth">{isAuthenticated ? 'logged-in' : 'logged-out'}</span>
       <span data-testid="email">{user?.email ?? 'none'}</span>
       <span data-testid="key">{apiKey ?? 'none'}</span>
-      <button onClick={() => login({ email: 'test@test.com', password: 'pass' })}>Login</button>
+      <button onClick={() => login('test@test.com', 'pass').catch(() => {})}>Login</button>
       <button onClick={logout}>Logout</button>
     </div>
   )
@@ -30,6 +34,7 @@ describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
+    vi.mocked(tokenService.validateToken).mockResolvedValue(mockValidResponse)
   })
 
   it('starts unauthenticated', () => {
@@ -37,7 +42,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('auth').textContent).toBe('logged-out')
   })
 
-  it('sets user and apiKey after login', async () => {
+  it('sets user and apiKey after login with valid token', async () => {
     vi.mocked(authService.login).mockResolvedValue(mockLoginResponse)
     render(<AuthProvider><TestComponent /></AuthProvider>)
 
@@ -47,12 +52,39 @@ describe('AuthContext', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('auth').textContent).toBe('logged-in')
-      expect(screen.getByTestId('email').textContent).toBe('test@test.com') // from credentials
+      expect(screen.getByTestId('email').textContent).toBe('test@test.com')
       expect(screen.getByTestId('key').textContent).toBe('key-abc')
     })
   })
 
-  it('persists apiKey in localStorage', async () => {
+  it('validates token via /api/tokens/validate after login', async () => {
+    vi.mocked(authService.login).mockResolvedValue(mockLoginResponse)
+    render(<AuthProvider><TestComponent /></AuthProvider>)
+
+    await act(async () => {
+      await userEvent.click(screen.getByText('Login'))
+    })
+
+    expect(tokenService.validateToken).toHaveBeenCalledWith('key-abc')
+  })
+
+  it('stays logged-out when token validation returns invalid', async () => {
+    vi.mocked(authService.login).mockResolvedValue(mockLoginResponse)
+    vi.mocked(tokenService.validateToken).mockResolvedValue({
+      valid: false,
+      uses_remaining: 0,
+      expires_at: null,
+    })
+    render(<AuthProvider><TestComponent /></AuthProvider>)
+
+    await act(async () => {
+      await userEvent.click(screen.getByText('Login'))
+    })
+
+    expect(screen.getByTestId('auth').textContent).toBe('logged-out')
+  })
+
+  it('persists api_key in localStorage after login', async () => {
     vi.mocked(authService.login).mockResolvedValue(mockLoginResponse)
     render(<AuthProvider><TestComponent /></AuthProvider>)
 
@@ -67,12 +99,8 @@ describe('AuthContext', () => {
     vi.mocked(authService.login).mockResolvedValue(mockLoginResponse)
     render(<AuthProvider><TestComponent /></AuthProvider>)
 
-    await act(async () => {
-      await userEvent.click(screen.getByText('Login'))
-    })
-    await act(async () => {
-      await userEvent.click(screen.getByText('Logout'))
-    })
+    await act(async () => { await userEvent.click(screen.getByText('Login')) })
+    await act(async () => { await userEvent.click(screen.getByText('Logout')) })
 
     expect(screen.getByTestId('auth').textContent).toBe('logged-out')
     expect(localStorage.getItem('api_key')).toBeNull()
@@ -90,7 +118,6 @@ describe('AuthContext', () => {
 
   it('is authenticated when api_key exists but user is missing from localStorage', () => {
     localStorage.setItem('api_key', 'orphan-key')
-    // no 'user' key — valid since login API does not return a user object
 
     render(<AuthProvider><TestComponent /></AuthProvider>)
 
@@ -99,14 +126,13 @@ describe('AuthContext', () => {
 
   it('is unauthenticated when user exists in localStorage but api_key is missing', () => {
     localStorage.setItem('user', JSON.stringify(mockStoredUser))
-    // no 'api_key' key set
 
     render(<AuthProvider><TestComponent /></AuthProvider>)
 
     expect(screen.getByTestId('auth').textContent).toBe('logged-out')
   })
 
-  it('does not crash when user in localStorage is corrupt JSON, and remains authenticated via api_key', () => {
+  it('does not crash when user JSON is corrupt, remains authenticated via api_key', () => {
     localStorage.setItem('api_key', 'some-key')
     localStorage.setItem('user', 'NOT_VALID_JSON{{')
 
@@ -114,8 +140,22 @@ describe('AuthContext', () => {
       render(<AuthProvider><TestComponent /></AuthProvider>)
     ).not.toThrow()
 
-    // api_key is still valid — user stays authenticated, just with no user data
     expect(screen.getByTestId('auth').textContent).toBe('logged-in')
     expect(screen.getByTestId('email').textContent).toBe('none')
+  })
+
+  it('clears state when auth:unauthorized event is fired', async () => {
+    localStorage.setItem('api_key', 'some-key')
+    localStorage.setItem('user', JSON.stringify(mockStoredUser))
+
+    render(<AuthProvider><TestComponent /></AuthProvider>)
+    expect(screen.getByTestId('auth').textContent).toBe('logged-in')
+
+    await act(async () => {
+      window.dispatchEvent(new Event('auth:unauthorized'))
+    })
+
+    expect(screen.getByTestId('auth').textContent).toBe('logged-out')
+    expect(localStorage.getItem('api_key')).toBeNull()
   })
 })

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export function RegisterPage() {
-  const { register, login } = useAuth()
+  const { register } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,7 +21,6 @@ export function RegisterPage() {
     setLoading(true)
     try {
       await register({ email, password })
-      await login({ email, password })
       navigate('/dashboard')
     } catch (err: unknown) {
       const e = err as { detail?: string }

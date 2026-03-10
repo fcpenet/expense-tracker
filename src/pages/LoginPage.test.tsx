@@ -39,7 +39,7 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith({ email: 'test@test.com', password: 'secret123' })
+      expect(mockLogin).toHaveBeenCalledWith('test@test.com', 'secret123')
     })
   })
 

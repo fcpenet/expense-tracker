@@ -20,7 +20,8 @@ export function GroupDetailPage() {
   const tripExpenses = expenses.filter((e) => e.trip_id === tripId)
   const balances = computeBalances(tripExpenses)
   const debts = simplifyDebts(balances)
-  const myDebts = debts.filter((d) => d.fromUserId === user?.id || d.toUserId === user?.id)
+  const uid = String(user?.id ?? '')
+  const myDebts = debts.filter((d) => d.fromUserId === uid || d.toUserId === uid)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -46,7 +47,7 @@ export function GroupDetailPage() {
             </h2>
             <div className="space-y-2">
               {myDebts.map((d, i) => {
-                const isOwing = d.fromUserId === user?.id
+                const isOwing = d.fromUserId === uid
                 return (
                   <div
                     key={i}
@@ -94,7 +95,7 @@ export function GroupDetailPage() {
                 <ExpenseCard
                   key={exp.id}
                   expense={exp}
-                  currentUserId={user?.id ?? ''}
+                  currentUserId={uid}
                   onDelete={removeExpense}
                 />
               ))}

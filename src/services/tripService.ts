@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { isAuthError, notifyUnauthorized } from 'turso-auth'
 import type { Trip, TripCreate, ApiError } from '../types'
 
-const BASE = 'https://rag-pipeline-91ct.vercel.app'
+const BASE = import.meta.env.VITE_API_URL ?? 'https://rag-pipeline-91ct.vercel.app'
 
 function authHeaders(apiKey: string) {
   return { headers: { 'X-API-Key': apiKey } }
@@ -9,9 +10,11 @@ function authHeaders(apiKey: string) {
 
 function toApiError(err: unknown): never {
   const e = err as { response?: { data?: { detail?: string }; status?: number } }
+  const status = e?.response?.status
+  if (status && isAuthError(status)) notifyUnauthorized()
   throw {
     detail: e?.response?.data?.detail ?? 'An error occurred',
-    status: e?.response?.status,
+    status,
   } satisfies ApiError
 }
 

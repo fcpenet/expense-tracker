@@ -17,7 +17,7 @@ export function DashboardPage() {
   }, [loadAll])
 
   const balances = computeBalances(expenses)
-  const myBalance = balances.find((b) => b.userId === user?.id)?.net ?? 0
+  const myBalance = balances.find((b) => b.userId === String(user?.id ?? ''))?.net ?? 0
 
   const recentExpenses = [...expenses]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -95,7 +95,7 @@ export function DashboardPage() {
               <ExpenseCard
                 key={exp.id}
                 expense={exp}
-                currentUserId={user?.id ?? ''}
+                currentUserId={String(user?.id ?? '')}
                 onDelete={removeExpense}
               />
             ))}

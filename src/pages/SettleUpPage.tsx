@@ -14,14 +14,15 @@ export function SettleUpPage() {
 
   const balances = computeBalances(expenses)
   const debts = simplifyDebts(balances)
+  const uid = String(user?.id ?? '')
   const myDebts = debts.filter(
-    (d) => d.fromUserId === user?.id || d.toUserId === user?.id
+    (d) => d.fromUserId === uid || d.toUserId === uid
   )
   const othersDebts = debts.filter(
-    (d) => d.fromUserId !== user?.id && d.toUserId !== user?.id
+    (d) => d.fromUserId !== uid && d.toUserId !== uid
   )
 
-  const myNet = balances.find((b) => b.userId === user?.id)?.net ?? 0
+  const myNet = balances.find((b) => b.userId === uid)?.net ?? 0
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -65,7 +66,7 @@ export function SettleUpPage() {
             </h2>
             <div className="space-y-2">
               {myDebts.map((d, i) => {
-                const isOwing = d.fromUserId === user?.id
+                const isOwing = d.fromUserId === uid
                 return (
                   <div
                     key={i}

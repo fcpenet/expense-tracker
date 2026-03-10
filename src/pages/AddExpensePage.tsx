@@ -46,7 +46,7 @@ export function AddExpensePage() {
       .map((s) => s.trim())
       .filter(Boolean)
 
-    const allIds = [user?.id ?? '', ...extraIds].filter(Boolean)
+    const allIds = [String(user?.id ?? ''), ...extraIds].filter(Boolean)
     const share = parseFloat((1 / allIds.length).toFixed(6))
     const participants = allIds.map((id) => ({ user_id: id, share }))
 
@@ -58,7 +58,7 @@ export function AddExpensePage() {
         amount: amt,
         category,
         location: location.trim() || undefined,
-        payor_id: user?.id ?? '',
+        payor_id: String(user?.id ?? ''),
         participants,
         trip_id: tripId,
       })

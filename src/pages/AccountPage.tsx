@@ -9,7 +9,7 @@ export function AccountPage() {
   const { expenses } = useExpenses()
 
   const balances = computeBalances(expenses)
-  const myNet = balances.find((b) => b.userId === user?.id)?.net ?? 0
+  const myNet = balances.find((b) => b.userId === String(user?.id ?? ''))?.net ?? 0
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -24,7 +24,7 @@ export function AccountPage() {
             </div>
             <div>
               <p className="font-semibold text-gray-900">{user?.email}</p>
-              <p className="text-xs text-gray-400 mt-0.5">ID: {user?.id?.slice(0, 16)}…</p>
+              <p className="text-xs text-gray-400 mt-0.5">ID: {String(user?.id ?? '').slice(0, 16) || '—'}</p>
             </div>
           </div>
         </div>

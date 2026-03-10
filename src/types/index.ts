@@ -3,7 +3,7 @@
 export interface UserRegister {
   email: string
   password: string
-  organization_id?: string
+  organization_id?: number
 }
 
 export interface UserLogin {
@@ -12,10 +12,17 @@ export interface UserLogin {
 }
 
 export interface UserResponse {
-  id: string
+  id: number
   email: string
-  organization_id: string | null
+  organization_id: number | null
+  role: string
   created_at: string
+}
+
+export interface TokenValidateResponse {
+  valid: boolean
+  uses_remaining: number | null
+  expires_at: string | null
 }
 
 export interface LoginResponse {
